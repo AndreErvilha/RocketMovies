@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 
 class Api {
   Dio _http;
-  static const base_url = "https://dev.movpass.com.br/api/";
+  static const base_url = "https://api.themoviedb.org/3/movie/";
+  static const api_key = "a351c734af021246a5830a91378544e4";
 
   Api._internal() {
     this._http = Dio(BaseOptions(
