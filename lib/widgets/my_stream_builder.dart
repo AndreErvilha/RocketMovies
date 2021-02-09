@@ -5,7 +5,7 @@ StreamBuilder myStreamBuilder({
   @required Stream stream,
   @required Widget onLoad,
   @required Widget withDataEmpty,
-  @required Widget withValidData,
+  @required Function(BuildContext, AsyncSnapshot<dynamic>) withValidData,
 }) =>
     StreamBuilder(
       stream: stream,
@@ -14,6 +14,6 @@ StreamBuilder myStreamBuilder({
         if (snapshot.data.length == 0)
           return withDataEmpty;
         else
-          return withValidData;
+          return withValidData(context,snapshot);
       },
     );
