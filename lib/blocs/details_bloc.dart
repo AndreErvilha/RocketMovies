@@ -43,7 +43,7 @@ class DetailsBloc extends BlocBase {
 
     // Request data and show an error on "catchError"
     Response res = await _api.get(
-      'movie/$id',
+      '$id',
       queryParameters: <String, dynamic>{
         'api_key': 'a351c734af021246a5830a91378544e4',
         'language': 'pt-BR',

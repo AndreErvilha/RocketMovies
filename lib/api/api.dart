@@ -30,6 +30,8 @@ class Api {
   }
 
   Future<Response> get(String path, {Map<dynamic, dynamic> queryParameters}) async {
+    // print(base_url + path);
+    // print(queryParameters);
     Response res = await _http
         .get(base_url + path, queryParameters: queryParameters)
         .catchError(onError);

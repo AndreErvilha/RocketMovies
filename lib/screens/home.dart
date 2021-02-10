@@ -1,7 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:rocket_movies/blocs/home_bloc.dart';
+import 'package:rocket_movies/utils/utils.dart';
 import 'package:rocket_movies/widgets/my_stream_builder.dart';
+import 'package:rocket_movies/widgets/with_data_empty.dart';
 import 'details.dart';
 
 class Home extends StatefulWidget {
@@ -26,9 +27,48 @@ class _HomeState extends State<Home> {
     return Scaffold(
         backgroundColor: Colors.blueGrey,
         drawer: Container(
+          alignment: Alignment.topCenter,
           color: Colors.blue,
           width: MediaQuery.of(context).size.width - 50,
           height: MediaQuery.of(context).size.height,
+          child: Column(
+            children: [
+              Container(
+                alignment: Alignment.bottomLeft,
+                height: 200,
+                color: Colors.white,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                          color: Colors.blueGrey, shape: BoxShape.circle),
+                      margin: EdgeInsets.all(10),
+                      height: 80,
+                      width: 80,
+                    ),
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Text.rich(
+                        TextSpan(text:'Rocket Movies\n',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          children: [
+                            TextSpan(text: 'by André Ervilha',style: TextStyle(fontWeight: FontWeight.normal, fontSize: 12))
+                          ]
+                        )
+                      ),
+                    ))
+                  ],
+                ),
+              ),
+              Expanded(child: Container(
+                padding: EdgeInsets.all(10),
+                alignment: Alignment.bottomCenter,
+                child: Text('v1.0',style: TextStyle(color: Colors.white),),
+              ))
+            ],
+          ),
         ),
         appBar: AppBar(title: Text('Rocket Movies')),
         body: myStreamBuilder(
@@ -40,7 +80,7 @@ class _HomeState extends State<Home> {
                   valueColor: AlwaysStoppedAnimation(Colors.white))),
           // Show a message explaining that don't have any movie close to release
           withValidData: buildWithValidData,
-          withDataEmpty: buildWithDataEmpty(),
+          withDataEmpty: withDataEmpty(),
         ));
   }
 
@@ -65,6 +105,7 @@ class _HomeState extends State<Home> {
                   itemCount: snapshot.data.length,
                   separatorBuilder: (context, index) => SizedBox(height: 5),
                   itemBuilder: (context, index) => buildCard(
+                        id: results[index]["id"],
                         title: results[index]["title"].toString(),
                         overview: results[index]["overview"].toString(),
                         vote: double.parse(
@@ -72,7 +113,7 @@ class _HomeState extends State<Home> {
                             .toStringAsFixed(1)
                             .toString()
                             .replaceAll('.', ','),
-                        releaseDt: results[index]["release_date"].toString(),
+                        releaseDt: date2br(results[index]["release_date"].toString()),
                         posterPath: results[index]["poster_path"].toString(),
                       )),
             ),
@@ -137,8 +178,8 @@ class _HomeState extends State<Home> {
           child: InkWell(
             splashColor: Colors.blueGrey.shade200,
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => Details(id)));
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (context) => Details(id)));
             },
             child: Container(
               height: 130,
@@ -235,21 +276,4 @@ class _HomeState extends State<Home> {
           ),
         ),
       );
-
-  Container buildWithDataEmpty() {
-    return Container(
-      padding: EdgeInsets.all(10),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          height: 80,
-          child: Card(
-            child: Center(
-                child:
-                    Text('Não há de novos lançamentos para serem exibidos!')),
-          ),
-        ),
-      ),
-    );
-  }
 }
