@@ -4,17 +4,17 @@ import 'package:dio/dio.dart';
 import 'package:rocket_movies/api/api.dart';
 import 'package:rxdart/rxdart.dart';
 
-class HomeBloc extends BlocBase {
+class DetailsBloc extends BlocBase {
   /* Make this object unique instantiable */
   // internal constructor
-  HomeBloc._internal();
+  DetailsBloc._internal();
 
   // initialize the instance variable
-  static final HomeBloc _instance = HomeBloc._internal();
+  static final DetailsBloc _instance = DetailsBloc._internal();
   int pagination = 1;
 
   // factory responsible to return the singleton
-  factory HomeBloc() {
+  factory DetailsBloc() {
     return _instance;
   }
 
@@ -22,56 +22,44 @@ class HomeBloc extends BlocBase {
   final Api _api = Api();
 
   /* Streams declarations */
-  BehaviorSubject<Map> _movies = BehaviorSubject<Map>();
+  BehaviorSubject<Map> _details = BehaviorSubject<Map>();
 
-  Stream<Map> get movies => _movies.stream;
+  Stream<Map> get details => _details.stream;
 
   /* Disposes */
   @override
   void dispose() {
-    _movies.close();
+    _details.close();
 
     super.dispose();
   }
 
   /* Functions */
-  Future<void> getMovies() async {
+  Future<void> getDetails(int id) async {
     Map myReturn;
 
     // set data as null indicating "request on progress"
-    _movies.sink.add(null);
+    _details.sink.add(null);
 
     // Request data and show an error on "catchError"
     Response res = await _api.get(
-      'upcoming',
+      'movie/$id',
       queryParameters: <String, dynamic>{
         'api_key': 'a351c734af021246a5830a91378544e4',
         'language': 'pt-BR',
-        'page': pagination,
-        'region': 'BR',
       },
     ).catchError((e) {
       print('Error on data acquisition!, error: $e');
-      _movies.addError('Error on data acquisition!');
+      _details.addError('Error on data acquisition!');
     });
 
     // If the request return null set as an empty List -> []
     try {
       myReturn = jsonDecode(res.toString());
-      _movies.sink.add(myReturn);
+      _details.sink.add(myReturn);
     } catch (e) {
       print('Error on data json decode!, error: $e');
-      _movies.addError('Error on data json decode!');
+      _details.addError('Error on data json decode!');
     }
-  }
-
-  void increasePagination(){
-    pagination++;
-    getMovies();
-  }
-
-  void decreasePagination(){
-    pagination--;
-    getMovies();
   }
 }

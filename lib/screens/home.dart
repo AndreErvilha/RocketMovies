@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:rocket_movies/blocs/home_bloc.dart';
 import 'package:rocket_movies/widgets/my_stream_builder.dart';
+import 'details.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -23,7 +24,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey,
+        backgroundColor: Colors.blueGrey,
         drawer: Container(
           color: Colors.blue,
           width: MediaQuery.of(context).size.width - 50,
@@ -34,37 +35,96 @@ class _HomeState extends State<Home> {
           context: context,
           stream: bloc.movies,
           // Show a progress indicator
-          onLoad: Center(child: CircularProgressIndicator()),
+          onLoad: Center(
+              child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(Colors.white))),
           // Show a message explaining that don't have any movie close to release
-          withValidData: (context, snapshot) {
-            final List results = snapshot.data["results"];
-            return Container(
-              child: Container(
-                height: double.infinity,
-                child: ListView.separated(
-                  padding: EdgeInsets.all(10),
-                    itemCount: snapshot.data.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 5),
-                    itemBuilder: (context, index) => buildCard(
-                          title: results[index]["title"].toString(),
-                          overview: results[index]["overview"].toString(),
-                          vote: double.parse(
-                                  results[index]["vote_average"].toString())
-                              .toStringAsFixed(1)
-                              .toString()
-                              .replaceAll('.', ','),
-                          releaseDt: results[index]["release_date"].toString(),
-                          posterPath: results[index]["poster_path"].toString(),
-                        )),
-              ),
-            );
-          },
+          withValidData: buildWithValidData,
           withDataEmpty: buildWithDataEmpty(),
         ));
   }
 
+  void increasePagination() {
+    bloc.increasePagination();
+  }
+
+  void decreasePagination() {
+    bloc.decreasePagination();
+  }
+
+  buildWithValidData(context, snapshot) {
+    final List results = snapshot.data["results"];
+    return Column(
+      children: [
+        Expanded(
+          child: Container(
+            child: Container(
+              height: double.infinity,
+              child: ListView.separated(
+                  padding: EdgeInsets.all(10),
+                  itemCount: snapshot.data.length,
+                  separatorBuilder: (context, index) => SizedBox(height: 5),
+                  itemBuilder: (context, index) => buildCard(
+                        title: results[index]["title"].toString(),
+                        overview: results[index]["overview"].toString(),
+                        vote: double.parse(
+                                results[index]["vote_average"].toString())
+                            .toStringAsFixed(1)
+                            .toString()
+                            .replaceAll('.', ','),
+                        releaseDt: results[index]["release_date"].toString(),
+                        posterPath: results[index]["poster_path"].toString(),
+                      )),
+            ),
+          ),
+        ),
+        Divider(height: 10),
+        Container(
+            color: Colors.blue,
+            child: Row(
+              children: [
+                Expanded(
+                    child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 30),
+                        child: RaisedButton(
+                          color: Colors.blueGrey,
+                          disabledColor: Colors.blueGrey.shade200,
+                          child: Text('Anterior',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: snapshot.data['page'] == 1
+                              ? null
+                              : decreasePagination,
+                        ))),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle, color: Colors.white),
+                  alignment: Alignment.center,
+                  child: Text(
+                      '${snapshot.data['page']}/${snapshot.data['total_pages']}'),
+                ),
+                Expanded(
+                    child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 30),
+                        child: RaisedButton(
+                          color: Colors.blueGrey,
+                          disabledColor: Colors.blueGrey.shade200,
+                          child: Text('próximo',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: snapshot.data['total_pages'] ==
+                                  snapshot.data['page']
+                              ? null
+                              : increasePagination,
+                        )))
+              ],
+            ))
+      ],
+    );
+  }
+
   buildCard(
-          {String title,
+          {int id,
+          String title,
           String overview,
           String vote,
           String releaseDt,
@@ -72,94 +132,106 @@ class _HomeState extends State<Home> {
       Card(
         elevation: 2,
         margin: EdgeInsets.zero,
-        child: Container(
-          height: 130,
-          width: double.infinity,
-          padding: EdgeInsets.all(5),
-          child: Row(
-            children: [
-              Container(
-                width: 85,
-                child: Image.network(
-                  'https://image.tmdb.org/t/p/w185/$posterPath',
-                  fit: BoxFit.fitHeight,
-                ),
-              ),
-              Expanded(
-                  child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Row(
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          child: InkWell(
+            splashColor: Colors.blueGrey.shade200,
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => Details(id)));
+            },
+            child: Container(
+              height: 130,
+              width: double.infinity,
+              padding: EdgeInsets.all(5),
+              child: Row(
+                children: [
+                  Container(
+                    width: 85,
+                    child: Image.network(
+                      'https://image.tmdb.org/t/p/w185/$posterPath',
+                      fit: BoxFit.fitHeight,
+                    ),
+                  ),
+                  Expanded(
+                      child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
                       children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                child: Text(
+                                  title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Text.rich(
+                                TextSpan(
+                                    text: '$vote',
+                                    children: [
+                                      TextSpan(
+                                          text: '/10',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.normal,
+                                            fontSize: 12,
+                                          ))
+                                    ],
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                              ),
+                            )
+                          ],
+                        ),
+                        SizedBox(
+                          height: 3,
+                        ),
                         Expanded(
                           child: Container(
                             width: double.infinity,
                             child: Text(
-                              title,
-                              maxLines: 2,
+                              overview,
+                              maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
+                                fontWeight: FontWeight.normal,
+                                fontSize: 16,
                               ),
                             ),
                           ),
                         ),
-                        Align(
+                        Container(
                           alignment: Alignment.centerRight,
+                          width: double.infinity,
                           child: Text.rich(
-                            TextSpan(
-                              text: '$vote',
-                              children: [
-                                TextSpan(
-                                    text: '/10',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 12,
-                                    ))
-                              ],
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)
-                            ),
+                            TextSpan(text: 'Lançamento: ', children: [
+                              TextSpan(
+                                  text: '$releaseDt',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.normal))
+                            ]),
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                         )
                       ],
                     ),
-                    SizedBox(
-                      height: 3,
-                    ),
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        child: Text(
-                          overview,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      alignment: Alignment.centerRight,
-                      width: double.infinity,
-                      child: Text.rich(
-                        TextSpan(text: 'Lançamento: ', children: [
-                          TextSpan(
-                              text: '$releaseDt',
-                              style: TextStyle(fontWeight: FontWeight.normal))
-                        ]),
-                        style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    )
-                  ],
-                ),
-              ))
-            ],
+                  ))
+                ],
+              ),
+            ),
           ),
         ),
       );
